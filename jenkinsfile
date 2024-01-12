@@ -1,0 +1,50 @@
+pipeline {
+  parameters {
+    string(name: 'projectKey', defaultValue: '')
+    string(name: 'testPlanKey', defaultValue: '')
+  }
+  agent {
+    docker { 
+      image 'mcr.microsoft.com/playwright:v1.27.0-focal'
+    } 
+  }
+  stages {
+    stage('install playwright') {
+      steps {
+        sh '''
+          npm i -D @playwright/test
+          npx playwright install
+        '''
+      }
+    }
+    stage('test') {
+      steps {
+        catchError(buildResult: 'SUCCESS', stageResult: 'FAILURE') {
+          sh '''
+            PLAYWRIGHT_JUNIT_OUTPUT_NAME=xray-report.xml npx playwright test
+          '''
+        }
+      }
+    }
+    stage('Import results to Xray') {
+      steps {
+        step([$class: 'XrayImportBuilder', endpointName: '/junit', importFilePath: 'xray-report.xml', importToSameExecution: 'true', projectKey: params.projectKey, testPlanKey: params.testPlanKey, fixVersion: '1.2', revision: '131', serverInstance: '10be58cc-2776-49a7-be60-b615dc99f4c0'])
+      }
+    }
+    stage('Extract Variable from log'){
+      steps {
+        script {
+          def logContent = Jenkins.getInstance().getItemByFullName(env.JOB_NAME).getBuildByNumber(Integer.parseInt(env.BUILD_NUMBER)).logFile.text
+          env.testExecs = (logContent =~ /XRAY_TEST_EXECS:.*/).findAll().first()
+          echo testExecs
+         }
+      }
+    }
+  }
+  post 
+  {
+    always {
+      junit '*.xml'
+    }
+  }
+}
