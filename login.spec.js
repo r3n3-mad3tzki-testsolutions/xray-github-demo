@@ -9,12 +9,6 @@ test.describe("Login validations", () => {
         await loginPage.login("demo","mode");
         const name = await loginPage.getInnerText();
 
-        //Adding Xray properties
-        testInfo.annotations.push({ type: 'test_key', description: 'CE-4' });
-        testInfo.annotations.push({ type: 'test_summary', description: 'Successful login.' });
-        testInfo.annotations.push({ type: 'requirements', description: 'CE-1' });
-        testInfo.annotations.push({ type: 'test_description', description: 'Validate that the login is successful.' });
-
         expect(name).toBe('Login succeeded. Now you can logout.');
     });
 
@@ -24,11 +18,6 @@ test.describe("Login validations", () => {
         await loginPage.login("demo","mode1");
         const name = await loginPage.getInnerText();
 
-        //Adding Xray properties
-        testInfo.annotations.push({ type: 'test_key', description: 'CE-7' });
-        testInfo.annotations.push({ type: 'test_summary', description: 'Unsuccessful login.' });
-        testInfo.annotations.push({ type: 'requirements', description: 'CE-1' });
-        testInfo.annotations.push({ type: 'test_description', description: 'Validate that the login is unsuccessful.' });
 
         // Capture a screenshot and attach it.
         const path = testInfo.outputPath('tmp_screenshot.png');
